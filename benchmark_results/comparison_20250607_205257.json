@@ -1,0 +1,94 @@
+{
+  "rest": {
+    "method": "REST",
+    "iterations": 1,
+    "character_fetch": {
+      "times": [
+        2.437943935394287
+      ],
+      "avg": 2.437943935394287,
+      "min": 2.437943935394287,
+      "max": 2.437943935394287,
+      "count": 826
+    },
+    "location_fetch": {
+      "times": [
+        0.32191896438598633
+      ],
+      "avg": 0.32191896438598633,
+      "min": 0.32191896438598633,
+      "max": 0.32191896438598633,
+      "count": 126
+    },
+    "total": {
+      "times": [
+        2.7598628997802734
+      ],
+      "avg": 2.7598628997802734,
+      "min": 2.7598628997802734,
+      "max": 2.7598628997802734
+    },
+    "api_calls": 49,
+    "theoretical_api_calls": 952
+  },
+  "graphql": {
+    "method": "GraphQL",
+    "iterations": 1,
+    "character_fetch": {
+      "times": [
+        10.221405029296875
+      ],
+      "avg": 10.221405029296875,
+      "min": 10.221405029296875,
+      "max": 10.221405029296875,
+      "count": 826
+    },
+    "location_fetch": {
+      "times": [
+        1.7625479698181152
+      ],
+      "avg": 1.7625479698181152,
+      "min": 1.7625479698181152,
+      "max": 1.7625479698181152,
+      "count": 126
+    },
+    "total": {
+      "times": [
+        11.98395299911499
+      ],
+      "avg": 11.98395299911499,
+      "min": 11.98395299911499,
+      "max": 11.98395299911499
+    },
+    "api_calls": 49,
+    "theoretical_api_calls": 2
+  },
+  "comparison": {
+    "time_improvement": {
+      "percentage": -334.2227651985572,
+      "factor": 0.23029653904551262,
+      "absolute": -9.224090099334717
+    },
+    "api_call_reduction": {
+      "percentage": 0,
+      "theoretical": 95.9
+    },
+    "recommendations": [
+      "GraphQL shows similar performance with current pagination implementation",
+      "Theoretical improvement of 96% API calls possible with full GraphQL optimization",
+      "REST is simpler for basic use cases",
+      "GraphQL excels when fetching related data (characters + locations)",
+      "Consider GraphQL for production systems requiring minimal API calls"
+    ]
+  },
+  "timestamp": "2025-06-07T20:52:42.910262",
+  "graphql_optimized": {
+    "method": "GraphQL (Optimized)",
+    "iterations": 1,
+    "total_time": 0.29348230361938477,
+    "character_count": 20,
+    "location_count": 20,
+    "api_calls": 1,
+    "note": "First page only - demonstrates potential for full optimization"
+  }
+}

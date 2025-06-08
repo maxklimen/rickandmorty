@@ -1,0 +1,94 @@
+{
+  "rest": {
+    "method": "REST",
+    "iterations": 1,
+    "character_fetch": {
+      "times": [
+        2.457395076751709
+      ],
+      "avg": 2.457395076751709,
+      "min": 2.457395076751709,
+      "max": 2.457395076751709,
+      "count": 826
+    },
+    "location_fetch": {
+      "times": [
+        0.301455020904541
+      ],
+      "avg": 0.301455020904541,
+      "min": 0.301455020904541,
+      "max": 0.301455020904541,
+      "count": 126
+    },
+    "total": {
+      "times": [
+        2.75885009765625
+      ],
+      "avg": 2.75885009765625,
+      "min": 2.75885009765625,
+      "max": 2.75885009765625
+    },
+    "api_calls": 49,
+    "theoretical_api_calls": 952
+  },
+  "graphql": {
+    "method": "GraphQL",
+    "iterations": 1,
+    "character_fetch": {
+      "times": [
+        12.202229976654053
+      ],
+      "avg": 12.202229976654053,
+      "min": 12.202229976654053,
+      "max": 12.202229976654053,
+      "count": 826
+    },
+    "location_fetch": {
+      "times": [
+        1.9425978660583496
+      ],
+      "avg": 1.9425978660583496,
+      "min": 1.9425978660583496,
+      "max": 1.9425978660583496,
+      "count": 126
+    },
+    "total": {
+      "times": [
+        14.144827842712402
+      ],
+      "avg": 14.144827842712402,
+      "min": 14.144827842712402,
+      "max": 14.144827842712402
+    },
+    "api_calls": 49,
+    "theoretical_api_calls": 2
+  },
+  "comparison": {
+    "time_improvement": {
+      "percentage": -412.7073723479569,
+      "factor": 0.1950430311583923,
+      "absolute": -11.385977745056152
+    },
+    "api_call_reduction": {
+      "percentage": 0,
+      "theoretical": 95.9
+    },
+    "recommendations": [
+      "GraphQL shows similar performance with current pagination implementation",
+      "Theoretical improvement of 96% API calls possible with full GraphQL optimization",
+      "REST is simpler for basic use cases",
+      "GraphQL excels when fetching related data (characters + locations)",
+      "Consider GraphQL for production systems requiring minimal API calls"
+    ]
+  },
+  "timestamp": "2025-06-07T20:50:39.750839",
+  "graphql_optimized": {
+    "method": "GraphQL (Optimized)",
+    "iterations": 1,
+    "total_time": 0.24603581428527832,
+    "character_count": 20,
+    "location_count": 20,
+    "api_calls": 1,
+    "note": "First page only - demonstrates potential for full optimization"
+  }
+}

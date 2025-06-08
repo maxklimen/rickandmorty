@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./output:/app/output
+    environment:
+      - LOG_LEVEL=INFO
+    command: uvicorn src.api.app:app --host 0.0.0.0 --port 8000 --reload
+  
+  rest-cli:
+    build: .
+    profiles: ["cli"]
+    volumes:
+      - ./output:/app/output
+    command: python -m src.rest.rest_main
+  
+  graphql-cli:
+    build: .
+    profiles: ["cli"]
+    volumes:
+      - ./output:/app/output
+    command: python -m src.graphql.graphql_main
+  
+  benchmark:
+    build: .
+    profiles: ["benchmark"]
+    volumes:
+      - ./output:/app/output
+      - ./benchmark_results:/app/benchmark_results
+    command: python -m src.benchmark.benchmark_runner --iterations 3

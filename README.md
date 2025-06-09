@@ -16,11 +16,22 @@ This tool downloads all 826 characters and 126 locations from the Rick and Morty
 
 ## 🚀 Quick Start
 
-### 1. Install
+### Prerequisites
+**You need Python 3.7+ installed.** Don't have Python? 
+- **Windows/Mac**: Download from [python.org](https://python.org/downloads)
+- **Mac with Homebrew**: `brew install python`
+- **Ubuntu/Debian**: `sudo apt install python3 python3-pip`
+
+### 1. Install Dependencies
 ```bash
-# You need Python 3.7 or higher
+# Option 1: Use requirements file (recommended)
+pip install -r requirements.txt
+
+# Option 2: Install directly (only one package needed)
 pip install requests
 ```
+
+> **Note**: The `requirements.txt` file just contains `requests` - that's the only dependency needed!
 
 ### 2. Run
 ```bash
@@ -113,6 +124,8 @@ id,name,status,species,type,gender,origin.name,origin.id,location.name,location.
 
 **📁 Full sample dataset available**: See [`sample_output/`](sample_output/) directory for complete CSV files and execution metadata.
 
+> **💡 Don't want to install Python?** You can download the sample CSV files directly from the [`sample_output/`](sample_output/) directory - they contain the complete dataset ready for Excel/Google Sheets!
+
 ## 💡 Tips
 
 - **Excel users**: Files open directly in Excel with proper column formatting
@@ -121,6 +134,23 @@ id,name,status,species,type,gender,origin.name,origin.id,location.name,location.
 - **Network issues**: Program automatically retries failed requests (3 attempts with smart delays)
 - **Rate limiting**: Automatically waits and retries if API rate limits are hit
 - **Safe to interrupt**: Can safely stop and restart - no corrupted files created
+
+## 🔧 Troubleshooting
+
+**"python: command not found"**
+- Try `python3 main.py` instead
+- Install Python from [python.org](https://python.org/downloads)
+
+**"pip: command not found"**
+- Try `python -m pip install requests`
+- Or `python3 -m pip install requests`
+
+**"Permission denied"**
+- Try `python main.py --output-dir ~/Desktop/rick_data`
+- Or run from a folder you have write access to
+
+**Just want the data?**
+- Download CSV files directly from [`sample_output/`](sample_output/) - no Python needed!
 
 ## 📄 License
 

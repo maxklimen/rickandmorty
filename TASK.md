@@ -1,3 +1,5 @@
+Hands-On Coding and Integration (2–4 Hours,
+Python)
 Goal
 Build a small Python application that consumes a public API—in this case, the
 Rick and Morty API - processes or transforms the data, and outputs specific

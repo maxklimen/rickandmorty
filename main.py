@@ -1,105 +1,255 @@
 #!/usr/bin/env python3
-"""Main entry point for Rick and Morty API Client."""
+"""
+Rick and Morty API Client
+A small Python application that fetches character and location data from the Rick and Morty API
+and exports it to CSV files with the specified fields.
+"""
+
+import csv
+import json
 import sys
+import os
 import argparse
+from typing import Dict, List, Optional, Tuple
+import requests
+
+
+class RickAndMortyClient:
+    """Client for interacting with the Rick and Morty API"""
+    
+    def __init__(self):
+        self.base_url = "https://rickandmortyapi.com/api"
+        self.session = requests.Session()
+    
+    def _get(self, endpoint: str) -> Dict:
+        """Make a GET request to the API with error handling"""
+        try:
+            response = self.session.get(f"{self.base_url}/{endpoint}")
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching {endpoint}: {e}")
+            sys.exit(1)
+    
+    def extract_location_id(self, location_url: str) -> Optional[int]:
+        """Extract location ID from URL"""
+        if not location_url:
+            return None
+        try:
+            # URL format: https://rickandmortyapi.com/api/location/3
+            return int(location_url.rstrip('/').split('/')[-1])
+        except (ValueError, IndexError):
+            return None
+    
+    def fetch_all_characters(self) -> List[Dict]:
+        """Fetch all characters with pagination"""
+        characters = []
+        page = 1
+        
+        while True:
+            print(f"Fetching characters page {page}...")
+            data = self._get(f"character?page={page}")
+            
+            # Process each character
+            for char in data['results']:
+                # Extract both ID and name for both origin and location for consistency
+                character_data = {
+                    'id': char['id'],
+                    'name': char['name'],
+                    'status': char['status'],
+                    'species': char['species'],
+                    'type': char['type'] or '',  # Additional field for subspecies info
+                    'gender': char['gender'],  # Additional field for demographic analysis
+                    # Origin location (where they're FROM)
+                    'origin_id': self.extract_location_id(char['origin']['url']),
+                    'origin_name': char['origin']['name'],
+                    # Current location (where they are NOW)
+                    'location_id': self.extract_location_id(char['location']['url']),
+                    'location_name': char['location']['name']
+                }
+                characters.append(character_data)
+            
+            # Check if there's a next page
+            if data['info']['next']:
+                page += 1
+            else:
+                break
+        
+        print(f"Total characters fetched: {len(characters)}")
+        return characters
+    
+    def fetch_all_locations(self) -> List[Dict]:
+        """Fetch all locations with pagination"""
+        locations = []
+        page = 1
+        
+        while True:
+            print(f"Fetching locations page {page}...")
+            data = self._get(f"location?page={page}")
+            
+            # Process each location
+            for loc in data['results']:
+                # Extract only the required fields
+                location_data = {
+                    'id': loc['id'],
+                    'name': loc['name'],
+                    'type': loc['type'],
+                    'dimension': loc['dimension']
+                }
+                locations.append(location_data)
+            
+            # Check if there's a next page
+            if data['info']['next']:
+                page += 1
+            else:
+                break
+        
+        print(f"Total locations fetched: {len(locations)}")
+        return locations
+    
+    def get_character_details(self, character_id: int) -> Tuple[Dict, Optional[Dict]]:
+        """Get all info about a character including location details"""
+        # Fetch character data
+        char_data = self._get(f"character/{character_id}")
+        
+        # Fetch location details if available
+        location_data = None
+        location_id = self.extract_location_id(char_data['location']['url'])
+        if location_id:
+            location_data = self._get(f"location/{location_id}")
+        
+        return char_data, location_data
+
+
+def write_characters_csv(characters: List[Dict], output_dir: str = "output"):
+    """Write character data to CSV with enhanced fields for better usability"""
+    os.makedirs(output_dir, exist_ok=True)
+    filepath = os.path.join(output_dir, "characters.csv")
+    
+    with open(filepath, 'w', newline='', encoding='utf-8') as f:
+        # Enhanced header with both required and additional helpful fields
+        fieldnames = [
+            'id', 'name', 'status', 'species', 'type', 'gender',
+            'origin.name', 'origin.id',  # Both name and ID for origin
+            'location.name', 'location.id'  # Both name and ID for current location
+        ]
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        
+        # Write character data
+        for char in characters:
+            writer.writerow({
+                'id': char['id'],
+                'name': char['name'],
+                'status': char['status'],
+                'species': char['species'],
+                'type': char['type'],
+                'gender': char['gender'],
+                'origin.name': char['origin_name'],
+                'origin.id': char['origin_id'] if char['origin_id'] else '',
+                'location.name': char['location_name'],
+                'location.id': char['location_id'] if char['location_id'] else ''
+            })
+    
+    print(f"Characters CSV written to: {filepath}")
+
+
+def write_locations_csv(locations: List[Dict], output_dir: str = "output"):
+    """Write location data to CSV with required fields"""
+    os.makedirs(output_dir, exist_ok=True)
+    filepath = os.path.join(output_dir, "locations.csv")
+    
+    with open(filepath, 'w', newline='', encoding='utf-8') as f:
+        # Write header with exact field names from requirements
+        fieldnames = ['id', 'name', 'type', 'dimension']
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        
+        # Write location data
+        for loc in locations:
+            writer.writerow(loc)
+    
+    print(f"Locations CSV written to: {filepath}")
+
+
+def display_character_details(char_data: Dict, location_data: Optional[Dict]):
+    """Display all character information including location details"""
+    print("\n" + "="*50)
+    print("CHARACTER INFORMATION")
+    print("="*50)
+    
+    # Character basic info
+    print(f"ID: {char_data['id']}")
+    print(f"Name: {char_data['name']}")
+    print(f"Status: {char_data['status']}")
+    print(f"Species: {char_data['species']}")
+    print(f"Type: {char_data['type'] or 'None'}")
+    print(f"Gender: {char_data['gender']}")
+    
+    # Origin info
+    print(f"\nORIGIN:")
+    print(f"  Name: {char_data['origin']['name']}")
+    
+    # Current location info
+    print(f"\nCURRENT LOCATION:")
+    print(f"  Name: {char_data['location']['name']}")
+    
+    if location_data:
+        print(f"  Type: {location_data['type']}")
+        print(f"  Dimension: {location_data['dimension']}")
+        print(f"  Residents: {len(location_data['residents'])}")
+    
+    # Episode info
+    print(f"\nEPISODES:")
+    print(f"  Appears in {len(char_data['episode'])} episodes")
+    
+    print("="*50)
+
 
 def main():
-    """Main entry point with subcommand routing."""
+    """Main function"""
     parser = argparse.ArgumentParser(
-        description="Rick and Morty API Client - Dual Implementation",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Available commands:
-  rest        Run REST implementation (refactored version)
-  graphql     Run GraphQL implementation (refactored version)
-  rest-v1     Run original REST implementation
-  graphql-v1  Run original GraphQL implementation
-  benchmark   Run performance comparison
-  compare     Generate comprehensive comparison report
-  api         Start FastAPI web server
-  
-Examples:
-  python main.py rest                    # Run refactored REST client
-  python main.py graphql --optimized     # Run refactored GraphQL
-  python main.py rest-v1                 # Run original REST implementation
-  python main.py benchmark --iterations 3 # Run benchmark
-  python main.py compare                 # Generate comparison report
-  python main.py api                     # Start web server
-        """
+        description='Fetch Rick and Morty data and export to CSV'
     )
-    
     parser.add_argument(
-        'command',
-        choices=['rest', 'graphql', 'rest-v1', 'graphql-v1', 'benchmark', 'compare', 'api'],
-        help='Command to run'
+        '--character-id', 
+        type=int, 
+        help='Get all info about a specific character (including location details)'
+    )
+    parser.add_argument(
+        '--output-dir', 
+        default='output', 
+        help='Directory for CSV output files (default: output)'
     )
     
-    # Parse just the command
-    args, remaining = parser.parse_known_args()
+    args = parser.parse_args()
     
-    # Route to appropriate module
-    if args.command == 'rest':
-        from src.rest.rest_main_v2 import main as rest_main
-        sys.argv = ['rest_main'] + remaining
-        return rest_main()
+    # Initialize client
+    client = RickAndMortyClient()
     
-    elif args.command == 'graphql':
-        from src.graphql.graphql_main_v2 import main as graphql_main
-        sys.argv = ['graphql_main'] + remaining
-        return graphql_main()
-    
-    elif args.command == 'rest-v1':
-        from src.rest.rest_main import main as rest_main
-        sys.argv = ['rest_main'] + remaining
-        return rest_main()
-    
-    elif args.command == 'graphql-v1':
-        from src.graphql.graphql_main import main as graphql_main
-        sys.argv = ['graphql_main'] + remaining
-        return graphql_main()
-    
-    elif args.command == 'benchmark':
-        from src.benchmark.benchmark_runner import main as benchmark_main
-        sys.argv = ['benchmark_runner'] + remaining
-        return benchmark_main()
-    
-    elif args.command == 'compare':
-        from src.shared.comparison_framework import generate_comparison_report
-        from src.rest.rest_client_v2 import RESTClient
-        from src.graphql.graphql_client_v2 import GraphQLClient
+    if args.character_id:
+        # Fetch specific character with location details
+        print(f"Fetching character {args.character_id}...")
+        char_data, location_data = client.get_character_details(args.character_id)
+        display_character_details(char_data, location_data)
+    else:
+        # Fetch all data and export to CSV
+        print("Starting data fetch...")
         
-        print("Generating comprehensive comparison report...")
-        try:
-            rest_client = RESTClient()
-            graphql_client = GraphQLClient()
-            
-            report = generate_comparison_report(rest_client, graphql_client)
-            
-            # Save report
-            report_file = "comparison_report.md"
-            with open(report_file, 'w') as f:
-                f.write(report)
-            
-            print(f"Comparison report generated: {report_file}")
-            print("\nKey findings:")
-            print("- REST is faster for this use case (2.76s vs 11.35s)")
-            print("- GraphQL uses fewer API calls (42 vs 49)")
-            print("- See full analysis in comparison_report.md")
-            
-            rest_client.close()
-            graphql_client.close()
-            return 0
-            
-        except Exception as e:
-            print(f"Error generating comparison report: {e}")
-            return 1
-    
-    elif args.command == 'api':
-        import uvicorn
-        print("Starting FastAPI server...")
-        print("Documentation available at: http://localhost:8000/docs")
-        uvicorn.run("src.api.app:app", host="0.0.0.0", port=8000, reload=True)
-        return 0
+        # Fetch all characters
+        characters = client.fetch_all_characters()
+        
+        # Fetch all locations
+        locations = client.fetch_all_locations()
+        
+        # Write to CSV files
+        write_characters_csv(characters, args.output_dir)
+        write_locations_csv(locations, args.output_dir)
+        
+        print("\nData export complete!")
+        print(f"Total characters: {len(characters)}")
+        print(f"Total locations: {len(locations)}")
+
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

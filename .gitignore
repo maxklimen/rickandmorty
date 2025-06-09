@@ -42,8 +42,11 @@ htmlcov/
 .dmypy.json
 dmypy.json
 
-# Output files
+# Output files (user-generated)
 output/*.csv
+
+# Keep sample output in repository
+!sample_output/
 
 # OS
 .DS_Store

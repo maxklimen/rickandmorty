@@ -103,12 +103,15 @@ Contains all 126 locations with these columns:
 
 ## 📊 Sample Output
 
+Preview of what you'll get:
 ```csv
 id,name,status,species,type,gender,origin.name,origin.id,location.name,location.id
 1,Rick Sanchez,Alive,Human,,Male,Earth (C-137),1,Citadel of Ricks,3
 2,Morty Smith,Alive,Human,,Male,unknown,,Citadel of Ricks,3
 3,Summer Smith,Alive,Human,,Female,Earth (Replacement Dimension),20,Earth (Replacement Dimension),20
 ```
+
+**📁 Full sample dataset available**: See [`sample_output/`](sample_output/) directory for complete CSV files and execution metadata.
 
 ## 💡 Tips
 

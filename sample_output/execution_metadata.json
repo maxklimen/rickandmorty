@@ -1,0 +1,84 @@
+{
+  "execution_info": {
+    "timestamp": "2024-06-09T11:15:00Z",
+    "python_version": "3.9.6",
+    "platform": "Darwin 24.5.0 (macOS)",
+    "execution_time_seconds": 2.85,
+    "api_calls_made": 49,
+    "retry_attempts": 0,
+    "error_count": 0
+  },
+  "api_info": {
+    "base_url": "https://rickandmortyapi.com/api",
+    "endpoints_used": [
+      "/character (42 pages)",
+      "/location (7 pages)"
+    ],
+    "rate_limits_encountered": false,
+    "api_version": "REST v1"
+  },
+  "data_statistics": {
+    "total_characters": 826,
+    "total_locations": 126,
+    "character_status_breakdown": {
+      "Alive": 439,
+      "Dead": 287,
+      "unknown": 100
+    },
+    "top_species": {
+      "Human": 366,
+      "Alien": 205,
+      "Humanoid": 68,
+      "Poopybutthole": 7,
+      "Mythological Creature": 6
+    },
+    "characters_with_location_id": 805,
+    "characters_with_origin_id": 423,
+    "locations_with_residents": 94
+  },
+  "output_files": {
+    "characters.csv": {
+      "rows": 827,
+      "columns": 10,
+      "size_bytes": 71325,
+      "fields": [
+        "id",
+        "name", 
+        "status",
+        "species",
+        "type",
+        "gender",
+        "origin.name",
+        "origin.id",
+        "location.name",
+        "location.id"
+      ]
+    },
+    "locations.csv": {
+      "rows": 127,
+      "columns": 4,
+      "size_bytes": 6005,
+      "fields": [
+        "id",
+        "name",
+        "type", 
+        "dimension"
+      ]
+    }
+  },
+  "data_quality": {
+    "characters_missing_location": 21,
+    "characters_missing_origin": 403,
+    "locations_empty_dimension": 45,
+    "url_parsing_success_rate": "97.8%"
+  },
+  "generation_info": {
+    "generated_by": "Rick and Morty API Client v1.0",
+    "command": "python main.py",
+    "config": {
+      "max_retries": 3,
+      "output_directory": "output",
+      "enhanced_fields": true
+    }
+  }
+}

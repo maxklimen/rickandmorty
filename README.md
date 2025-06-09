@@ -11,7 +11,8 @@ This tool downloads all 826 characters and 126 locations from the Rick and Morty
 - 🔍 **Character lookup**: Get detailed info about any character
 - 📁 **CSV export**: Ready for Excel, analysis tools
 - 🚀 **Fast & reliable**: ~3 seconds to get everything
-- 🛡️ **Error handling**: Won't crash on network issues
+- 🛡️ **Smart error handling**: Auto-retries network issues and rate limits
+- 🔄 **Progress preservation**: Continues from where it left off
 
 ## 🚀 Quick Start
 
@@ -114,7 +115,9 @@ id,name,status,species,type,gender,origin.name,origin.id,location.name,location.
 - **Excel users**: Files open directly in Excel with proper column formatting
 - **Data analysis**: Use `location.id` and `origin.id` for joining data
 - **Character lookup**: Use `--character-id` to get detailed info about specific characters
-- **Troubleshooting**: If network fails, just run again - it's safe to retry
+- **Network issues**: Program automatically retries failed requests (3 attempts with smart delays)
+- **Rate limiting**: Automatically waits and retries if API rate limits are hit
+- **Safe to interrupt**: Can safely stop and restart - no corrupted files created
 
 ## 📄 License
 

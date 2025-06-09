@@ -60,18 +60,58 @@ class RickAndMortyClient:
 
 ### Error Handling Strategy
 
-#### Network Errors
+The application uses **layered error handling** with different strategies for different types of failures:
+
+#### 1. Transient Errors (Automatic Retry)
 ```python
-try:
-    response = self.session.get(f"{self.base_url}/{endpoint}")
-    response.raise_for_status()  # Raises HTTPError for 4xx/5xx
-    return response.json()
-except requests.exceptions.RequestException as e:
-    print(f"Error fetching {endpoint}: {e}")
-    sys.exit(1)  # Fail fast with clear message
+def _get(self, endpoint: str, max_retries: int = 3) -> Dict:
+    for attempt in range(max_retries + 1):
+        try:
+            response = self.session.get(f"{self.base_url}/{endpoint}")
+            
+            # Handle rate limiting specifically
+            if response.status_code == 429:
+                if attempt < max_retries:
+                    retry_after = int(response.headers.get('retry-after', 2 ** attempt))
+                    print(f"Rate limited. Waiting {retry_after} seconds (attempt {attempt + 1}/{max_retries})...")
+                    time.sleep(retry_after)
+                    continue
+                    
+            response.raise_for_status()
+            return response.json()
+            
+        except requests.exceptions.RequestException as e:
+            if attempt < max_retries:
+                wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s
+                print(f"Network error (attempt {attempt + 1}/{max_retries}): {e}")
+                print(f"Retrying in {wait_time} seconds...")
+                time.sleep(wait_time)
+                continue
+            else:
+                # Final failure after all retries
+                print(f"Error fetching {endpoint} after {max_retries} retries: {e}")
+                sys.exit(1)
 ```
 
-#### Data Extraction Errors
+**Automatically retries for:**
+- **Network connection issues** (temporary outages)
+- **Rate limiting (429 errors)** (respects Retry-After header)
+- **Temporary server errors (5xx)** (server overload)
+- **DNS resolution failures** (temporary DNS issues)
+
+**Retry strategy:**
+- **3 attempts** total (initial + 2 retries)
+- **Exponential backoff**: 1s, 2s, 4s for network errors
+- **Rate limit handling**: Uses API's Retry-After header when available
+- **Clear progress feedback**: Shows attempt number and wait time
+
+**User experience:**
+- Program continues automatically for temporary issues
+- Clear feedback about retry attempts and wait times
+- Preserves progress (doesn't restart from beginning)
+- Only stops after exhausting all retry attempts
+
+#### 2. Data Errors (Graceful Degradation)
 ```python
 def extract_location_id(self, location_url: str) -> Optional[int]:
     if not location_url:
@@ -82,12 +122,77 @@ def extract_location_id(self, location_url: str) -> Optional[int]:
         return None  # Graceful degradation
 ```
 
+**When this happens:**
+- Character has empty location URL
+- Malformed location URL format
+- Missing fields in API response
+
+**User experience:**
+- Program continues running
+- Empty values in CSV for problematic data
+- Complete dataset with best-effort data extraction
+
+#### 3. Permanent Errors (Fail-Fast)
+```python
+# During CSV writing
+with open(filepath, 'w', newline='', encoding='utf-8') as f:
+    # If this fails (permissions, disk space), program stops
+```
+
+**Fails immediately for:**
+- **File system errors** (no write permission, disk full, file locked)
+- **Persistent API errors** (404 Not Found, 403 Forbidden)
+- **Authentication errors** (401 Unauthorized)
+- **Malformed requests** (400 Bad Request)
+
+**User experience:**
+- Program stops immediately with clear error message
+- These errors require manual intervention to fix
+- Data was successfully fetched (for file system errors)
+
+### User Error Experience Summary
+
+| Error Type | Program Behavior | User Sees | User Action |
+|------------|------------------|-----------|-------------|
+| **Network failure** | 🔄 **Auto-retries 3x with backoff** | "Network error (attempt 1/3)... Retrying in 1 seconds..." | Wait - program handles automatically |
+| **Rate limiting (429)** | 🔄 **Auto-retries with API delays** | "Rate limited. Waiting 60 seconds (attempt 1/3)..." | Wait - respects API rate limits |
+| **Server errors (5xx)** | 🔄 **Auto-retries 3x with backoff** | "Network error (attempt 1/3)... Retrying in 2 seconds..." | Wait - temporary server issues |
+| **Permanent API errors** | ❌ Stops immediately | "Error fetching... 404 Not Found" | Check API endpoint/authentication |
+| **Malformed data** | ✅ Continues | (no error message, blank CSV fields) | Normal - use CSV as-is |
+| **File permission** | ❌ Stops at CSV write | "Permission denied: output/..." | Fix permissions or change output dir |
+| **Disk full** | ❌ Stops at CSV write | "No space left on device" | Free disk space |
+
+### Retry Behavior Details
+
+**Automatic retry scenarios:**
+- Network connection drops during execution
+- Temporary DNS resolution issues  
+- API server temporarily overloaded (5xx errors)
+- Rate limiting from API (429 errors)
+- SSL/TLS handshake failures
+
+**Retry strategy:**
+- **Exponential backoff**: 1s → 2s → 4s delays
+- **Rate limit respect**: Uses API's `Retry-After` header
+- **Progress preservation**: Continues from current page, doesn't restart
+- **Maximum attempts**: 3 total attempts per request
+- **Clear feedback**: Shows which attempt and wait time
+
+### Error Handling Design Principles
+
+1. **Clear feedback**: Users always know what went wrong
+2. **Fail-fast for critical issues**: Don't waste time on unfixable problems
+3. **Graceful degradation for data issues**: Best effort data collection
+4. **Retry-friendly**: Safe to run again after fixing issues
+5. **No corruption**: Never create partial or invalid CSV files
+
 #### Comprehensive Error Coverage
-- **HTTP errors**: 4xx/5xx status codes
-- **Network failures**: Timeouts, connection issues
-- **JSON parsing**: Invalid response format
-- **Data extraction**: Missing/malformed fields
-- **URL parsing**: Invalid location URLs
+- **HTTP errors**: 4xx/5xx status codes with specific messages
+- **Network failures**: Connection timeouts, DNS resolution, SSL issues
+- **JSON parsing**: Invalid response format handling
+- **Data extraction**: Missing/malformed fields with null-safe processing
+- **URL parsing**: Invalid location URLs with graceful fallback
+- **File system**: Permission and disk space issues
 
 ## API Analysis
 

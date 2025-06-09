@@ -10,6 +10,7 @@ import json
 import sys
 import os
 import argparse
+import time
 from typing import Dict, List, Optional, Tuple
 import requests
 
@@ -21,15 +22,39 @@ class RickAndMortyClient:
         self.base_url = "https://rickandmortyapi.com/api"
         self.session = requests.Session()
     
-    def _get(self, endpoint: str) -> Dict:
-        """Make a GET request to the API with error handling"""
-        try:
-            response = self.session.get(f"{self.base_url}/{endpoint}")
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            print(f"Error fetching {endpoint}: {e}")
-            sys.exit(1)
+    def _get(self, endpoint: str, max_retries: int = 3) -> Dict:
+        """Make a GET request to the API with automatic retry for transient failures"""
+        for attempt in range(max_retries + 1):
+            try:
+                response = self.session.get(f"{self.base_url}/{endpoint}")
+                
+                # Handle rate limiting specifically
+                if response.status_code == 429:
+                    if attempt < max_retries:
+                        # Check for Retry-After header, default to exponential backoff
+                        retry_after = int(response.headers.get('retry-after', 2 ** attempt))
+                        print(f"Rate limited. Waiting {retry_after} seconds (attempt {attempt + 1}/{max_retries})...")
+                        time.sleep(retry_after)
+                        continue
+                    else:
+                        print(f"Rate limit exceeded. Max retries ({max_retries}) reached.")
+                        response.raise_for_status()  # This will raise the 429 error
+                
+                # Check for other HTTP errors
+                response.raise_for_status()
+                return response.json()
+                
+            except requests.exceptions.RequestException as e:
+                if attempt < max_retries:
+                    # Exponential backoff for network errors
+                    wait_time = 2 ** attempt
+                    print(f"Network error (attempt {attempt + 1}/{max_retries}): {e}")
+                    print(f"Retrying in {wait_time} seconds...")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    print(f"Error fetching {endpoint} after {max_retries} retries: {e}")
+                    sys.exit(1)
     
     def extract_location_id(self, location_url: str) -> Optional[int]:
         """Extract location ID from URL"""

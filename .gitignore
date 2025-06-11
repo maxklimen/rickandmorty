@@ -54,3 +54,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Claude Code guidance file (local only)
+CLAUDE.md

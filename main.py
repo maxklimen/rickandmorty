@@ -23,7 +23,11 @@ class RickAndMortyClient:
         self.session = requests.Session()
     
     def _get(self, endpoint: str, max_retries: int = 3) -> Dict:
-        """Make a GET request to the API with automatic retry for transient failures"""
+        """Make a GET request to the API with automatic retry for transient failures
+        
+        Implements exponential backoff for network errors and respects rate limit headers.
+        This ensures reliable data fetching even under poor network conditions.
+        """
         for attempt in range(max_retries + 1):
             try:
                 response = self.session.get(f"{self.base_url}/{endpoint}")
@@ -57,7 +61,11 @@ class RickAndMortyClient:
                     sys.exit(1)
     
     def extract_location_id(self, location_url: str) -> Optional[int]:
-        """Extract location ID from URL"""
+        """Extract location ID from URL
+        
+        Parses the numeric ID from location URLs like:
+        https://rickandmortyapi.com/api/location/3 -> 3
+        """
         if not location_url:
             return None
         try:
@@ -67,7 +75,11 @@ class RickAndMortyClient:
             return None
     
     def fetch_all_characters(self) -> List[Dict]:
-        """Fetch all characters with pagination"""
+        """Fetch all characters with pagination
+        
+        Handles all pages automatically to retrieve the complete dataset.
+        Returns a list of character dictionaries with all required fields.
+        """
         characters = []
         page = 1
         
@@ -77,14 +89,15 @@ class RickAndMortyClient:
             
             # Process each character
             for char in data['results']:
-                # Extract both ID and name for both origin and location for consistency
+                # Extract both ID and name for origin and location
+                # This provides both human-readable names and machine-readable IDs
                 character_data = {
                     'id': char['id'],
                     'name': char['name'],
                     'status': char['status'],
                     'species': char['species'],
-                    'type': char['type'] or '',  # Additional field for subspecies info
-                    'gender': char['gender'],  # Additional field for demographic analysis
+                    'type': char['type'] or '',  # Character variant (e.g., "Evil", "Cronenberg")
+                    'gender': char['gender'],  # For demographic analysis
                     # Origin location (where they're FROM)
                     'origin_id': self.extract_location_id(char['origin']['url']),
                     'origin_name': char['origin']['name'],
@@ -147,7 +160,11 @@ class RickAndMortyClient:
 
 
 def write_characters_csv(characters: List[Dict], output_dir: str = "output"):
-    """Write character data to CSV with enhanced fields for better usability"""
+    """Write character data to CSV with all required fields from TASK.md
+    
+    Includes both the required fields (id, name, status, species, origin.name, location id)
+    and additional useful fields for enhanced analysis capabilities.
+    """
     os.makedirs(output_dir, exist_ok=True)
     filepath = os.path.join(output_dir, "characters.csv")
     

@@ -7,7 +7,7 @@ This document provides technical details about the Rick and Morty API client imp
 ### Project Structure
 ```
 rickandmorty/
-├── main.py              # Single file implementation (~270 lines)
+├── main.py              # Single file implementation (~296 lines)
 ├── requirements.txt     # Minimal dependencies (requests only)
 ├── README.md           # User-focused documentation
 ├── TASK.md             # Original requirements

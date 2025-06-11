@@ -12,7 +12,7 @@ This tool downloads all 826 characters and 126 locations from the Rick and Morty
 - 📁 **CSV export**: Ready for Excel, analysis tools
 - 🚀 **Fast & reliable**: ~3 seconds to get everything
 - 🛡️ **Smart error handling**: Auto-retries network issues and rate limits
-- 🔄 **Progress preservation**: Continues from where it left off
+- ♻️ **Automatic retry**: Smart error recovery with exponential backoff
 
 ## 🚀 Quick Start
 
